@@ -7,6 +7,7 @@
 
 import UIKit
 
+
 //works within do try loop
 //https://stackoverflow.com/questions/46262942/printing-valid-json-with-a-swift-script
 /*
@@ -29,18 +30,10 @@ var feed =
 
 class ViewController: UIViewController
 {
-    class Train
-    {
-        var arrivalTime: String = ""; //arrT
-        var destination: String = ""; //destNm
-        //var line: String = ""; //rt
-        var nextStop: String = ""; //nextStaNm"
-        var approaching:String = ""; //isApp
-        var delayed:String = ""; //isDly
-    }
     
     @IBOutlet weak var trainTableView: UITableView!
     @IBOutlet weak var trainLines: UISegmentedControl!
+    @IBOutlet weak var refreshBtn: UIButton!
     
     var trainArray: [Train] = []
     var dataAvailable = false;
@@ -48,18 +41,68 @@ class ViewController: UIViewController
     enum SerializationError: Error
     {
         case missing(String)
-        case invalid(String, Any)
+        case invalid(String, Any) //never used
     }
     
     override func viewDidLoad()
     {
         super.viewDidLoad()
- 
         trainTableView.delegate = self;
         trainTableView.dataSource = self;
         loadInfo();
-        /*
         // Do any additional setup after loading the view.
+    }
+    
+    override func didReceiveMemoryWarning()
+    {
+        super.didReceiveMemoryWarning()
+        // Dispose of any resources that can be recreated.
+    }
+    
+    @IBAction func refreshTableView(_ sender: UIButton) {
+        loadInfo();
+        print("Refreshed")
+    }
+    @IBAction func selectTrainLine(_ sender: UISegmentedControl)
+    {
+        let name : String = sender.titleForSegment(at: sender.selectedSegmentIndex)!
+        switch name
+        {
+        case "Blue": feed = "http://lapi.transitchicago.com/api/1.0/ttpositions.aspx?key=e2914a1bff374380b597c72183beb83d&rt=blue&outputType=JSON"
+        case "Brn": feed = "http://lapi.transitchicago.com/api/1.0/ttpositions.aspx?key=e2914a1bff374380b597c72183beb83d&rt=brn&outputType=JSON"
+        case "G": feed = "http://lapi.transitchicago.com/api/1.0/ttpositions.aspx?key=e2914a1bff374380b597c72183beb83d&rt=G&outputType=JSON"
+        case "Org": feed = "http://lapi.transitchicago.com/api/1.0/ttpositions.aspx?key=e2914a1bff374380b597c72183beb83d&rt=Org&outputType=JSON"
+        case "P": feed = "http://lapi.transitchicago.com/api/1.0/ttpositions.aspx?key=e2914a1bff374380b597c72183beb83d&rt=P&outputType=JSON"
+        case "Pink": feed = "http://lapi.transitchicago.com/api/1.0/ttpositions.aspx?key=e2914a1bff374380b597c72183beb83d&rt=Pink&outputType=JSON"
+        case "Y": feed = "http://lapi.transitchicago.com/api/1.0/ttpositions.aspx?key=e2914a1bff374380b597c72183beb83d&rt=Y&outputType=JSON"
+        default: feed = "http://lapi.transitchicago.com/api/1.0/ttpositions.aspx?key=e2914a1bff374380b597c72183beb83d&rt=red&outputType=JSON"
+        }
+        //print(feed);
+        loadInfo();
+    }
+    
+    func convertTimeTo12(arrivalTime: String) -> String {
+        var time12:String = "";
+        if let range = arrivalTime.range(of: "T") {
+            let time24 = arrivalTime[range.upperBound...];
+            //print(time24);
+            
+            let dateAsString = time24
+            let df = DateFormatter()
+            df.dateFormat = "HH:mm:ss"
+
+            let date = df.date(from: String(dateAsString))
+            df.dateFormat = "hh:mm a"
+
+            time12 = df.string(from: date!)
+            //print(time12)
+        }
+        return time12;
+    }
+
+    func loadInfo ()
+    {
+        trainArray = []; // empty tableView
         guard let feedURL = URL(string: feed) else { return }
         
         let request = URLRequest(url: feedURL)
@@ -74,9 +117,6 @@ class ViewController: UIViewController
             }
             guard let data = data else { return }
             
-            //not sure what this does
-            //print(data);
-            //print("Hello Art");
             
             do {
                 if let json =
@@ -89,140 +129,6 @@ class ViewController: UIViewController
                         throw SerializationError.missing("ctatt");
                     }
                     //print(ctatt); //returns array
-                    // For locations API
-                    //use ctatt, not json to get info
-                    guard let route = ctatt["route"] as? [[String:Any]] else
-                    {
-                        throw SerializationError.missing("route");
-                    }
-                    //TODO: Change to not use exact index
-                    let trainIndex = route[0];
-                    guard let trains = trainIndex["train"] as? [[String: Any]] else
-                    {
-                        throw SerializationError.missing("train");
-                    }
-                    /*
-                    let route = ctatt["route"] as! [[String: Any]];
-                    //print(route); //see output below
-                    let trainIndex = route[0];
-                    //print(train)
-                    let trains = trainIndex["train"] as! [[String: Any]];
-                    //print(trains)
-                    print(trains.count) */
-                                        
-                    //let eta = ctatt["eta"] as! [[String:Any]];
-                    for e in trains
-                    {
-                        do {
-                            let info = Train();
-                            guard let arrTime = e["arrT"] as? String else
-                            {
-                                throw SerializationError.missing("arrT");
-                            }
-                            guard let dest = e["destNm"] as? String else
-                            {
-                                throw SerializationError.missing("destNm");
-                            }
-                            guard let nextStop = e["nextStaNm"] as? String else
-                            {
-                                throw SerializationError.missing("nextStaNm");
-                            }
-                            guard let appr = e["isApp"] as? String else
-                            {
-                                throw SerializationError.missing("isApp");
-                            }
-                            guard let delayed = e["isDly"] as? String else
-                            {
-                                throw SerializationError.missing("isDly");
-                            }
-                            info.arrivalTime = arrTime;
-                            info.destination = dest;
-                            info.nextStop = nextStop;
-                            info.approaching = appr;
-                            info.delayed = delayed;
-                            self.trainArray.append(info);
-                            
-                        } catch SerializationError.missing(let msg)
-                        {
-                            print("Missing \(msg)");
-                        } catch let error as NSError {
-                            print(error.localizedDescription);
-                        }
-                    }
-                    self.dataAvailable = true;
-                    //print(self.trainArray.count);
-                    DispatchQueue.main.async
-                    {
-                        self.trainTableView.reloadData();
-                    }
-                    //let destNm = eta.compactMap { $0["destNm"] as? String}
-                    //print(eta.count);
-                    //print(destNm);
-                }
-            } catch SerializationError.missing(let msg) {
-                print("Missing \(msg)");
-            } catch let error as NSError {
-                print(error.localizedDescription);
-            }
-        }.resume() */
-    }
-    
-    override func didReceiveMemoryWarning()
-    {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-    
-    @IBAction func selectTrainLine(_ sender: UISegmentedControl)
-    {
-        let name : String = sender.titleForSegment(at: sender.selectedSegmentIndex)!
-
-        // TODO: switchs work, but returns error code 500: "Invalid parameter: 'rt'
-        switch name
-        {
-        case "blue": feed = "http://lapi.transitchicago.com/api/1.0/ttfollow.aspx?key=e2914a1bff374380b597c72183beb83d&rt=blue&outputType=JSON"
-        case "brn": feed = "http://lapi.transitchicago.com/api/1.0/ttfollow.aspx?key=e2914a1bff374380b597c72183beb83d&rt=brn&outputType=JSON"
-        case "G": feed = "http://lapi.transitchicago.com/api/1.0/ttfollow.aspx?key=e2914a1bff374380b597c72183beb83d&rt=G&outputType=JSON"
-        case "Org": feed = "http://lapi.transitchicago.com/api/1.0/ttfollow.aspx?key=e2914a1bff374380b597c72183beb83d&rt=Org&outputType=JSON"
-        case "P": feed = "http://lapi.transitchicago.com/api/1.0/ttfollow.aspx?key=e2914a1bff374380b597c72183beb83d&rt=P&outputType=JSON"
-        case "Pink": feed = "http://lapi.transitchicago.com/api/1.0/ttfollow.aspx?key=e2914a1bff374380b597c72183beb83d&rt=Pink&outputType=JSON"
-        case "Y": feed = "http://lapi.transitchicago.com/api/1.0/ttfollow.aspx?key=e2914a1bff374380b597c72183beb83d&rt=Y&outputType=JSON"
-        default: feed = "http://lapi.transitchicago.com/api/1.0/ttfollow.aspx?key=e2914a1bff374380b597c72183beb83d&rt=red&outputType=JSON"
-        }
-        print(feed);
-        
-        loadInfo();
-        
-    }
-    
-    func loadInfo ()
-    {
-        guard let feedURL = URL(string: feed) else { return }
-        
-        let request = URLRequest(url: feedURL)
-        let session = URLSession.shared
-        session.dataTask(with: request)
-        {
-            data, response, error in
-            guard error == nil else
-            {
-                print(error!.localizedDescription)
-                return
-            }
-            guard let data = data else { return }
-            
-            
-            do {
-                if let json =
-                    try JSONSerialization.jsonObject(with: data, options: []) as? [String:Any]
-                {
-                    // guard let on something that has = { following it
-                    print(json);
-                    guard let ctatt = json["ctatt"] as? [String: Any] else
-                    {
-                        throw SerializationError.missing("ctatt");
-                    }
-                    //print(ctatt); //returns array
                     guard let route = ctatt["route"] as? [[String:Any]] else
                     {
                         throw SerializationError.missing("route");
@@ -234,27 +140,27 @@ class ViewController: UIViewController
                         throw SerializationError.missing("train");
                     }
 
-                    for e in trains
+                    for train in trains
                     {
                         do {
                             let info = Train();
-                            guard let arrTime = e["arrT"] as? String else
+                            guard let arrTime = train["arrT"] as? String else
                             {
                                 throw SerializationError.missing("arrT");
                             }
-                            guard let dest = e["destNm"] as? String else
+                            guard let dest = train["destNm"] as? String else
                             {
                                 throw SerializationError.missing("destNm");
                             }
-                            guard let nextStop = e["nextStaNm"] as? String else
+                            guard let nextStop = train["nextStaNm"] as? String else
                             {
                                 throw SerializationError.missing("nextStaNm");
                             }
-                            guard let appr = e["isApp"] as? String else
+                            guard let appr = train["isApp"] as? String else
                             {
                                 throw SerializationError.missing("isApp");
                             }
-                            guard let delayed = e["isDly"] as? String else
+                            guard let delayed = train["isDly"] as? String else
                             {
                                 throw SerializationError.missing("isDly");
                             }
@@ -285,30 +191,19 @@ class ViewController: UIViewController
             }
         }.resume()
     }
-        
-}
-    
-    
+     
 
+}
 
 extension ViewController: UITableViewDelegate
 {
-    
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath)
     {
-        //TODO: Format Time right
-        //print("Clicked on cell");
-        
         let record = trainArray[indexPath.row];
         let title = record.nextStop;
-        let dateformatter = DateFormatter();
-        dateformatter.dateFormat = "HH:mm";
-        // string format = "2015-04-30T20:23:32
-        let time = record.arrivalTime;
-        print(time.split(separator: "T", maxSplits: 1, omittingEmptySubsequences: false));
-        //let newClock = dateformatter.string(from: record.arrivalTime);
+        let time = convertTimeTo12(arrivalTime: record.arrivalTime);
         
-        let message = record.destination + " " + record.arrivalTime; //format this time
+        let message = "Heading towards " + record.destination + ". Estimated arrival: " + time;
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert);
         let okayAction = UIAlertAction(title: "Okay", style: .default, handler: nil);
         alertController.addAction(okayAction);
@@ -336,7 +231,20 @@ extension ViewController: UITableViewDataSource
         {
             let cell = tableView.dequeueReusableCell(withIdentifier: "trainCell", for: indexPath);
             let record = trainArray[indexPath.row];
-
+            // TODO: Show time left until arrival. Already have time has a string, need current time and compare
+            // MARK: Calender uses Dates, needs to be strings to present on string. Maybe Dates work too
+            let time = convertTimeTo12(arrivalTime: record.arrivalTime);
+            /*
+            let date = Date()
+            let calendar = Calendar.current
+            let hour = calendar.component(.hour, from: date)
+            let minutes = calendar.component(.minute, from: date)
+            let nowString = "\(Date())"
+            
+            let difference = Calendar.current.dateComponents([.hour, .minute], from: nowString, to: time)
+            let formattedString = String(format: "%02ld%02ld", difference.hour!, difference.minute!)
+            print(formattedString)
+            */
             if (record.approaching == "1")
             {
                 cell.textLabel?.text = "Next Stop: " + record.nextStop + " APPROACHING";
@@ -348,6 +256,7 @@ extension ViewController: UITableViewDataSource
             } else
             {
                 cell.textLabel?.text = "Next Stop: " + record.nextStop;
+                cell.backgroundColor = UIColor.clear;
             }
             cell.detailTextLabel?.text = "Heading towards: " + record.destination;
             return cell;

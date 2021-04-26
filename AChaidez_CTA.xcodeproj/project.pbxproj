@@ -13,6 +13,7 @@
 		2258FD102634939C006E8101 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2258FD0E2634939C006E8101 /* Main.storyboard */; };
 		2258FD12263493A0006E8101 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2258FD11263493A0006E8101 /* Assets.xcassets */; };
 		2258FD15263493A0006E8101 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2258FD13263493A0006E8101 /* LaunchScreen.storyboard */; };
+		226BF18E2637684F0021637B /* Train.swift in Sources */ = {isa = PBXBuildFile; fileRef = 226BF18D2637684F0021637B /* Train.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +25,7 @@
 		2258FD11263493A0006E8101 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2258FD14263493A0006E8101 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		2258FD16263493A0006E8101 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		226BF18D2637684F0021637B /* Train.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Train.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +58,7 @@
 		2258FD072634939C006E8101 /* AChaidez_CTA */ = {
 			isa = PBXGroup;
 			children = (
+				226BF18D2637684F0021637B /* Train.swift */,
 				2258FD082634939C006E8101 /* AppDelegate.swift */,
 				2258FD0A2634939C006E8101 /* SceneDelegate.swift */,
 				2258FD0C2634939C006E8101 /* ViewController.swift */,
@@ -137,6 +140,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				226BF18E2637684F0021637B /* Train.swift in Sources */,
 				2258FD0D2634939C006E8101 /* ViewController.swift in Sources */,
 				2258FD092634939C006E8101 /* AppDelegate.swift in Sources */,
 				2258FD0B2634939C006E8101 /* SceneDelegate.swift in Sources */,
