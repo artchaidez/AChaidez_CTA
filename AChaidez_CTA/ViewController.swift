@@ -23,17 +23,14 @@ if let JSONString = String(data: data, encoding: String.Encoding.utf8)
 /*let feed =
     "http://lapi.transitchicago.com/api/1.0/ttfollow.aspx?key=e2914a1bff374380b597c72183beb83d&outputType=JSON" */
 
-// TODO: Configure a way to switch between lines
 //Locations API
 var feed =
     "http://lapi.transitchicago.com/api/1.0/ttpositions.aspx?key=e2914a1bff374380b597c72183beb83d&rt=red&outputType=JSON"
 
 class ViewController: UIViewController
 {
-    
     @IBOutlet weak var trainTableView: UITableView!
     @IBOutlet weak var trainLines: UISegmentedControl!
-    @IBOutlet weak var refreshBtn: UIButton!
     
     var trainArray: [Train] = []
     var dataAvailable = false;
@@ -50,6 +47,7 @@ class ViewController: UIViewController
         trainTableView.delegate = self;
         trainTableView.dataSource = self;
         loadInfo();
+        self.trainTableView.addSubview(self.refreshControl);
         // Do any additional setup after loading the view.
     }
     
@@ -59,10 +57,22 @@ class ViewController: UIViewController
         // Dispose of any resources that can be recreated.
     }
     
-    @IBAction func refreshTableView(_ sender: UIButton) {
+    // Note: Removed refresh button, swipe down on table to refresh data
+    
+    lazy var refreshControl: UIRefreshControl = {
+        let refreshControl = UIRefreshControl();
+        refreshControl.addTarget(self, action: #selector(ViewController.handleRefresh(_:)),for: UIControl.Event.valueChanged);
+        return refreshControl;
+    }()
+    
+    @objc func handleRefresh(_ refreshControl: UIRefreshControl)
+    {
+        //print("refresh");
         loadInfo();
-        print("Refreshed")
+        //self.tableView.reloadData()
+        refreshControl.endRefreshing();
     }
+    
     @IBAction func selectTrainLine(_ sender: UISegmentedControl)
     {
         let name : String = sender.titleForSegment(at: sender.selectedSegmentIndex)!
@@ -100,7 +110,7 @@ class ViewController: UIViewController
         return time12;
     }
 
-    func loadInfo ()
+    @objc func loadInfo ()
     {
         trainArray = []; // empty tableView
         guard let feedURL = URL(string: feed) else { return }
@@ -116,7 +126,6 @@ class ViewController: UIViewController
                 return
             }
             guard let data = data else { return }
-            
             
             do {
                 if let json =
@@ -192,7 +201,6 @@ class ViewController: UIViewController
         }.resume()
     }
      
-
 }
 
 extension ViewController: UITableViewDelegate
@@ -234,6 +242,26 @@ extension ViewController: UITableViewDataSource
             // TODO: Show time left until arrival. Already have time has a string, need current time and compare
             // MARK: Calender uses Dates, needs to be strings to present on string. Maybe Dates work too
             let time = convertTimeTo12(arrivalTime: record.arrivalTime);
+            
+            let dateFormat = DateFormatter();
+            let newTime = dateFormat.date(from: time); //time is now as Date
+            /*
+            let date = Date()
+            let calendar = Calendar.current;
+            let hour = calendar.component(.hour, from: date)
+            let minutes = calendar.component(.minute, from: date)
+            */
+       
+            /*
+            let cTimeCompenents = Calendar.current.dateComponents([.hour, .minute], from: date)
+            let aTimeCompenents = Calendar.current.dateComponents([.hour, .minute], from: newTime)
+            let difference = Calendar.current.dateComponents([.hour, .minute], from: cTimeCompenents, to: aTimeCompenents)
+            */
+            //let currentTime =
+            //print(newTime?.timeIntervalSince(date) as Any);
+            //print(newTime?.timeIntervalSinceNow);
+            //print(date.timeIntervalSince(newTime));
+
             /*
             let date = Date()
             let calendar = Calendar.current
@@ -255,7 +283,7 @@ extension ViewController: UITableViewDataSource
                 cell.backgroundColor = UIColor.systemRed;
             } else
             {
-                cell.textLabel?.text = "Next Stop: " + record.nextStop;
+                cell.textLabel?.text = "Next Stop: " + record.nextStop ;
                 cell.backgroundColor = UIColor.clear;
             }
             cell.detailTextLabel?.text = "Heading towards: " + record.destination;
