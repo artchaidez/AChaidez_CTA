@@ -32,18 +32,18 @@ class ViewController: UIViewController
     @IBOutlet weak var trainTableView: UITableView!
     @IBOutlet weak var trainLines: UISegmentedControl!
     
-    var trainArray: [Train] = []
+    var trainArray: [Train] = [];
     var dataAvailable = false;
     
     enum SerializationError: Error
     {
-        case missing(String)
+        case missing(String);
         case invalid(String, Any) //never used
     }
     
     override func viewDidLoad()
     {
-        super.viewDidLoad()
+        super.viewDidLoad();
         trainTableView.delegate = self;
         trainTableView.dataSource = self;
         loadInfo();
@@ -53,12 +53,11 @@ class ViewController: UIViewController
     
     override func didReceiveMemoryWarning()
     {
-        super.didReceiveMemoryWarning()
+        super.didReceiveMemoryWarning();
         // Dispose of any resources that can be recreated.
     }
     
     // Note: Removed refresh button, swipe down on table to refresh data
-    
     lazy var refreshControl: UIRefreshControl = {
         let refreshControl = UIRefreshControl();
         refreshControl.addTarget(self, action: #selector(ViewController.handleRefresh(_:)),for: UIControl.Event.valueChanged);
@@ -90,22 +89,43 @@ class ViewController: UIViewController
         //print(feed);
         loadInfo();
     }
-    
-    func convertTimeTo12(arrivalTime: String) -> String {
+    /*
+    func convertTimeTo12(arrivalTime: String) -> String
+    {
+        var time12:String = "";
+        if let range = arrivalTime.range(of: "T") {
+            let time24 = arrivalTime[range.upperBound...];
+            //print(time24);
+
+            let df = DateFormatter()
+            df.dateFormat = "HH:mm:ss"
+
+            let date = df.date(from: String(time24))
+            df.dateFormat = "hh:mm a"
+
+            time12 = df.string(from: date!)
+            //print(time12)
+        }
+        return time12;
+    }
+    */
+    func convertTimeString(arrivalTime: String) -> String
+    {
         var time12:String = "";
         if let range = arrivalTime.range(of: "T") {
             let time24 = arrivalTime[range.upperBound...];
             //print(time24);
             
-            let dateAsString = time24
-            let df = DateFormatter()
-            df.dateFormat = "HH:mm:ss"
-
-            let date = df.date(from: String(dateAsString))
-            df.dateFormat = "hh:mm a"
-
-            time12 = df.string(from: date!)
-            //print(time12)
+            if let date24 = Formatter.stringToDate.date(from: String(time24))
+            {
+                //print(date24);
+                //print(Date());
+                time12 = Formatter.toAMPM.string(from: date24);
+                //print(time12);
+            } else
+            {
+                print("There was an error decoding the string")
+            }
         }
         return time12;
     }
@@ -115,14 +135,14 @@ class ViewController: UIViewController
         trainArray = []; // empty tableView
         guard let feedURL = URL(string: feed) else { return }
         
-        let request = URLRequest(url: feedURL)
-        let session = URLSession.shared
+        let request = URLRequest(url: feedURL);
+        let session = URLSession.shared;
         session.dataTask(with: request)
         {
             data, response, error in
             guard error == nil else
             {
-                print(error!.localizedDescription)
+                print(error!.localizedDescription);
                 return
             }
             guard let data = data else { return }
@@ -200,7 +220,24 @@ class ViewController: UIViewController
             }
         }.resume()
     }
-     
+    
+}
+
+//Apple says to DateFormatter expensive to make, cache a single instance
+//Was originally creating a Formatter every time in func convertTimeTo12
+extension Formatter {
+    
+    static let stringToDate : DateFormatter = {
+        let df = DateFormatter();
+        df.dateFormat = "HH:mm:ss";
+        return df;
+    }()
+    
+    static let toAMPM : DateFormatter = {
+        let df = DateFormatter();
+        df.dateFormat = "hh:mm a";
+        return df;
+    }()
 }
 
 extension ViewController: UITableViewDelegate
@@ -208,8 +245,9 @@ extension ViewController: UITableViewDelegate
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath)
     {
         let record = trainArray[indexPath.row];
-        let title = record.nextStop;
-        let time = convertTimeTo12(arrivalTime: record.arrivalTime);
+        let title = "Next Stop: " + record.nextStop;
+        //let time = convertTimeTo12(arrivalTime: record.arrivalTime);
+        let time = convertTimeString(arrivalTime: record.arrivalTime);
         
         let message = "Heading towards " + record.destination + ". Estimated arrival: " + time;
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert);
@@ -233,46 +271,15 @@ extension ViewController: UITableViewDataSource
         return dataAvailable ? trainArray.count : 1;
     }
     
+    //https://stackoverflow.com/questions/47539006/swift-dateformatter-extract-time
+    //MARK: Cannot get Time only from Date, having issues comparing current time to arival time
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell
     {
         if (dataAvailable)
         {
             let cell = tableView.dequeueReusableCell(withIdentifier: "trainCell", for: indexPath);
-            let record = trainArray[indexPath.row];
-            // TODO: Show time left until arrival. Already have time has a string, need current time and compare
-            // MARK: Calender uses Dates, needs to be strings to present on string. Maybe Dates work too
-            let time = convertTimeTo12(arrivalTime: record.arrivalTime);
+            let record = trainArray[indexPath.row]; //Note: error appeared here once
             
-            let dateFormat = DateFormatter();
-            let newTime = dateFormat.date(from: time); //time is now as Date
-            /*
-            let date = Date()
-            let calendar = Calendar.current;
-            let hour = calendar.component(.hour, from: date)
-            let minutes = calendar.component(.minute, from: date)
-            */
-       
-            /*
-            let cTimeCompenents = Calendar.current.dateComponents([.hour, .minute], from: date)
-            let aTimeCompenents = Calendar.current.dateComponents([.hour, .minute], from: newTime)
-            let difference = Calendar.current.dateComponents([.hour, .minute], from: cTimeCompenents, to: aTimeCompenents)
-            */
-            //let currentTime =
-            //print(newTime?.timeIntervalSince(date) as Any);
-            //print(newTime?.timeIntervalSinceNow);
-            //print(date.timeIntervalSince(newTime));
-
-            /*
-            let date = Date()
-            let calendar = Calendar.current
-            let hour = calendar.component(.hour, from: date)
-            let minutes = calendar.component(.minute, from: date)
-            let nowString = "\(Date())"
-            
-            let difference = Calendar.current.dateComponents([.hour, .minute], from: nowString, to: time)
-            let formattedString = String(format: "%02ld%02ld", difference.hour!, difference.minute!)
-            print(formattedString)
-            */
             if (record.approaching == "1")
             {
                 cell.textLabel?.text = "Next Stop: " + record.nextStop + " APPROACHING";
@@ -283,7 +290,8 @@ extension ViewController: UITableViewDataSource
                 cell.backgroundColor = UIColor.systemRed;
             } else
             {
-                cell.textLabel?.text = "Next Stop: " + record.nextStop ;
+                //let time = convertTime(arrivalTime: record.arrivalTime);
+                cell.textLabel?.text = "Next Stop: " + record.nextStop;
                 cell.backgroundColor = UIColor.clear;
             }
             cell.detailTextLabel?.text = "Heading towards: " + record.destination;
