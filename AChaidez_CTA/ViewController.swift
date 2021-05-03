@@ -129,7 +129,19 @@ class ViewController: UIViewController
         }
         return time12;
     }
-
+    /*
+    func convertDate(arrivalTime: String) -> String
+    {
+        var time12:String = "";
+        if let range = arrivalTime.range(of: "T") {
+            let time24 = String(arrivalTime[arrivalTime.startIndex..<range.lowerBound]  + " " + arrivalTime[range.upperBound...]);
+            //print();
+            //print(time24);
+            time12 = time24;
+        }
+        return time12;
+    }
+    */
     @objc func loadInfo ()
     {
         trainArray = []; // empty tableView
@@ -193,6 +205,7 @@ class ViewController: UIViewController
                             {
                                 throw SerializationError.missing("isDly");
                             }
+                            //print(arrTime);
                             info.arrivalTime = arrTime;
                             info.destination = dest;
                             info.nextStop = nextStop;
@@ -223,7 +236,7 @@ class ViewController: UIViewController
     
 }
 
-//Apple says to DateFormatter expensive to make, cache a single instance
+//DateFormatter expensive to make, cache a single instance
 //Was originally creating a Formatter every time in func convertTimeTo12
 extension Formatter {
     
@@ -236,6 +249,12 @@ extension Formatter {
     static let toAMPM : DateFormatter = {
         let df = DateFormatter();
         df.dateFormat = "hh:mm a";
+        return df;
+    }()
+    // Note: Not used
+    static let toDate : DateFormatter = {
+        let df = DateFormatter();
+        df.dateFormat = "yyyy-MM-dd hh:mm:ss";
         return df;
     }()
 }
@@ -271,10 +290,10 @@ extension ViewController: UITableViewDataSource
         return dataAvailable ? trainArray.count : 1;
     }
     
-    //https://stackoverflow.com/questions/47539006/swift-dateformatter-extract-time
-    //MARK: Cannot get Time only from Date, having issues comparing current time to arival time
+    //MARK: Cannot get Central Time only from Date, having issues comparing current time to arival time
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell
     {
+        
         if (dataAvailable)
         {
             let cell = tableView.dequeueReusableCell(withIdentifier: "trainCell", for: indexPath);
@@ -290,7 +309,6 @@ extension ViewController: UITableViewDataSource
                 cell.backgroundColor = UIColor.systemRed;
             } else
             {
-                //let time = convertTime(arrivalTime: record.arrivalTime);
                 cell.textLabel?.text = "Next Stop: " + record.nextStop;
                 cell.backgroundColor = UIColor.clear;
             }

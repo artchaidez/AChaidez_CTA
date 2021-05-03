@@ -7,7 +7,6 @@
 
 import Foundation
 
-/* MARK: New class being made everytime segmented control used, are other classes still using up resources?*/
 public class Train
 {
     var arrivalTime: String = ""; //arrT
